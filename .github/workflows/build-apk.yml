@@ -7,8 +7,11 @@ on:
     paths:
       - 'app/**'
       - 'gradle/**'
+      - '*.gradle'
       - '*.gradle.kts'
+      - 'gradle.properties'
       - 'gradle/libs.versions.toml'
+      - 'AndroidManifest.xml'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -25,13 +28,36 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
+      - name: Configure Android SDK
+        shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
+            -type f -name sdkmanager | sort -V | tail -n 1)
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager not found"
+            exit 1
+          fi
+
+          yes | "$SDKMANAGER" \
+            --sdk_root="$ANDROID_HOME" --licenses || true
+
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Check Android project
+        shell: bash
+        run: |
+          echo "Repository root:"
+          ls -la
+          test -f settings.gradle.kts -o -f settings.gradle
+          test -d app
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -39,7 +65,9 @@ jobs:
           gradle-version: '9.3.1'
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        shell: bash
+        run: |
+          gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
