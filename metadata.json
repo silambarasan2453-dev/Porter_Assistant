@@ -1,0 +1,6 @@
+{
+  "name": "Porter Location Assistant",
+  "description": "Native driver companion for Porter partners that monitors incoming booking offers, calculates straight-line distance from home, and provides instant visual range warnings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

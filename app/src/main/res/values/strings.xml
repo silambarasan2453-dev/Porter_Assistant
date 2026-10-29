@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Porter Location Assistant</string>
+    <string name="accessibility_service_description">Monitors incoming Porter driver booking cards to extract destination details, calculate straight-line distance from your home, and display a timely range alert.</string>
+</resources>
